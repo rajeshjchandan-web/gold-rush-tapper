@@ -1,85 +1,263 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gold Rush Tapper</title>
+
 <style>
-body {
-    margin: 0;
-    background: #111;
-    color: white;
-    font-family: Arial;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial, sans-serif;
 }
 
-#game {
-    text-align: center;
+body{
+    background: linear-gradient(135deg,#0f0f0f,#1f1f1f,#2d2d2d);
+    overflow:hidden;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
 }
 
-#coin {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: gold;
-    border: 10px solid orange;
-    cursor: pointer;
-    transition: transform 0.1s;
-    margin: auto;
+#gameContainer{
+    width:100%;
+    max-width:420px;
+    text-align:center;
+    padding:20px;
 }
 
-#coin:active {
-    transform: scale(0.9);
+h1{
+    font-size:38px;
+    margin-bottom:10px;
+    color:gold;
+    text-shadow:0 0 15px gold;
 }
 
-.score {
-    font-size: 40px;
-    margin-bottom: 20px;
+#scoreBox{
+    background:rgba(255,255,255,0.08);
+    border-radius:20px;
+    padding:15px;
+    margin-bottom:20px;
+    box-shadow:0 0 20px rgba(255,215,0,0.2);
 }
 
-.combo {
-    font-size: 24px;
-    color: cyan;
-    margin-top: 15px…}
+#score{
+    font-size:42px;
+    color:#00ffcc;
+    font-weight:bold;
+}
+
+#combo{
+    margin-top:8px;
+    font-size:22px;
+    color:#ff66ff;
+}
+
+#coin{
+    width:220px;
+    height:220px;
+    margin:auto;
+    border-radius:50%;
+    background: radial-gradient(circle at top,#ffd700,#ff9900);
+    border:10px solid #ffcc00;
+    box-shadow:
+        0 0 25px gold,
+        0 0 60px orange,
+        inset 0 0 25px rgba(255,255,255,0.4);
+
+    cursor:pointer;
+    transition:transform 0.08s;
+    position:relative;
+}
+
+#coin::before{
+    content:"₹";
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:90px;
+    color:white;
+    text-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+
+#coin:active{
+    transform:scale(0.92);
+}
+
+.tapEffect{
+    position:absolute;
+    color:gold;
+    font-size:30px;
+    font-weight:bold;
+    animation:floatUp 1s forwards;
+    pointer-events:none;
+}
+
+@keyframes floatUp{
+    0%{
+        opacity:1;
+        transform:translateY(0);
+    }
+    100%{
+        opacity:0;
+        transform:translateY(-120px);
+    }
+}
+
+#bottomBar{
+    margin-top:25px;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+}
+
+.gameBtn{
+    flex:1;
+    padding:14px;
+    border:none;
+    border-radius:15px;
+    background:linear-gradient(45deg,#ffcc00,#ff8800);
+    color:black;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 5px 15px rgba(255,165,0,0.4);
+}
+
+.gameBtn:hover{
+    transform:scale(1.03);
+}
+
+#highScore{
+    margin-top:18px;
+    font-size:18px;
+    color:#cccccc;
+}
+
 </style>
 </head>
+
 <body>
 
-<div id="game">
-    <div class="score">Coins: <span id="score">0</span></div>
+<div id="gameContainer">
+
+    <h1>Gold Rush</h1>
+
+    <div id="scoreBox">
+        <div id="score">0</div>
+        <div id="combo">Combo x1</div>
+    </div>
+
     <div id="coin"></div>
-    <div class="combo">Combo x<span id="combo">1</span></div>
+
+    <div id="highScore">
+        High Score: <span id="best">0</span>
+    </div>
+
+    <div id="bottomBar">
+        <button class="gameBtn" onclick="resetGame()">
+            Reset
+        </button>
+
+        <button class="gameBtn" onclick="boostMode()">
+            Boost
+        </button>
+    </div>
+
 </div>
 
 <script>
+
 let score = 0;
 let combo = 1;
 let lastTap = 0;
+let highScore = localStorage.getItem("highScore") || 0;
 
-const scoreEl = document.getElementById('score');
-const comboEl = document.getElementById('combo');
-const coin = document.getElementById('coin');
+const scoreEl = document.getElementById("score");
+const comboEl = document.getElementById("combo");
+const coin = document.getElementById("coin");
+const bestEl = document.getElementById("best");
 
-coin.addEventListener('click', () => {
+bestEl.innerText = highScore;
+
+coin.addEventListener("click",(e)=>{
+
     const now = Date.now();
 
     if(now - lastTap < 500){
         combo++;
-    } else {
+    }else{
         combo = 1;
     }
 
     score += combo;
 
+    if(score > highScore){
+        highScore = score;
+        localStorage.setItem("highScore",highScore);
+    }
+
     scoreEl.innerText = score;
-    comboEl.innerText = combo;
+    comboEl.innerText = "Combo x" + combo;
+    bestEl.innerText = highScore;
+
+    createTapEffect(e);
 
     lastTap = now;
 });
+
+function createTapEffect(e){
+
+    const effect = document.createElement("div");
+
+    effect.classList.add("tapEffect");
+
+    effect.innerText = "+" + combo;
+
+    document.body.appendChild(effect);
+
+    effect.style.left = e.clientX + "px";
+    effect.style.top = e.clientY + "px";
+
+    setTimeout(()=>{
+        effect.remove();
+    },1000);
+}
+
+function resetGame(){
+    score = 0;
+    combo = 1;
+
+    scoreEl.innerText = score;
+    comboEl.innerText = "Combo x1";
+}
+
+function boostMode(){
+
+    let boost = setInterval(()=>{
+        score += 10;
+
+        if(score > highScore){
+            highScore = score;
+            localStorage.setItem("highScore",highScore);
+        }
+
+        scoreEl.innerText = score;
+        bestEl.innerText = highScore;
+
+    },100);
+
+    setTimeout(()=>{
+        clearInterval(boost);
+    },3000); 
+}
+
 </script>
 
 </body>
