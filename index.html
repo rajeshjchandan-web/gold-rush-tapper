@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Rush Tapper</title>
+<style>
+body {
+    margin: 0;
+    background: #111;
+    color: white;
+    font-family: Arial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#game {
+    text-align: center;
+}
+
+#coin {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: gold;
+    border: 10px solid orange;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin: auto;
+}
+
+#coin:active {
+    transform: scale(0.9);
+}
+
+.score {
+    font-size: 40px;
+    margin-bottom: 20px;
+}
+
+.combo {
+    font-size: 24px;
+    color: cyan;
+    margin-top: 15px…}
+</style>
+</head>
+<body>
+
+<div id="game">
+    <div class="score">Coins: <span id="score">0</span></div>
+    <div id="coin"></div>
+    <div class="combo">Combo x<span id="combo">1</span></div>
+</div>
+
+<script>
+let score = 0;
+let combo = 1;
+let lastTap = 0;
+
+const scoreEl = document.getElementById('score');
+const comboEl = document.getElementById('combo');
+const coin = document.getElementById('coin');
+
+coin.addEventListener('click', () => {
+    const now = Date.now();
+
+    if(now - lastTap < 500){
+        combo++;
+    } else {
+        combo = 1;
+    }
+
+    score += combo;
+
+    scoreEl.innerText = score;
+    comboEl.innerText = combo;
+
+    lastTap = now;
+});
+</script>
+
+</body>
+</html>
