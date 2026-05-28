@@ -177,6 +177,167 @@ h1{
     color:#cccccc;
 }
 
+
+#achievementsPanel{
+    margin-top:18px;
+    background:rgba(255,255,255,0.08);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:0 0 18px rgba(255,215,0,0.15);
+    max-height:150px;
+    overflow-y:auto;
+}
+
+#achievementsPanel h2{
+    font-size:20px;
+    color:gold;
+    margin-bottom:10px;
+}
+
+.achievementItem{
+    padding:8px;
+    margin:6px 0;
+    border-radius:12px;
+    background:rgba(0,0,0,0.25);
+    font-size:14px;
+    color:#ddd;
+}
+
+.achievementUnlocked{
+    color:#00ffcc;
+    box-shadow:0 0 10px rgba(0,255,204,0.25);
+}
+
+.achievementToast{
+    position:fixed;
+    top:18%;
+    left:50%;
+    transform:translateX(-50%);
+    background:linear-gradient(45deg,#ffcc00,#ff8800);
+    color:#111;
+    padding:14px 22px;
+    border-radius:18px;
+    font-size:20px;
+    font-weight:bold;
+    z-index:1000;
+    box-shadow:0 0 25px gold;
+    animation:achievementPop 2.2s forwards;
+}
+
+@keyframes achievementPop{
+    0%{opacity:0; transform:translateX(-50%) scale(0.6);}
+    20%{opacity:1; transform:translateX(-50%) scale(1.08);}
+    80%{opacity:1; transform:translateX(-50%) scale(1);}
+    100%{opacity:0; transform:translateX(-50%) scale(0.8);}
+}
+
+
+#spinWheelPanel{
+    margin-top:18px;
+    background:rgba(255,255,255,0.08);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:0 0 18px rgba(255,215,0,0.15);
+}
+
+#wheel{
+    width:170px;
+    height:170px;
+    margin:10px auto;
+    border-radius:50%;
+    border:8px solid gold;
+    background:conic-gradient(
+        #ffcc00 0deg 60deg,
+        #ff8800 60deg 120deg,
+        #00ffcc 120deg 180deg,
+        #ff66ff 180deg 240deg,
+        #66ccff 240deg 300deg,
+        #ff4444 300deg 360deg
+    );
+    box-shadow:0 0 25px gold, inset 0 0 20px rgba(0,0,0,0.35);
+    position:relative;
+    transition:transform 3s cubic-bezier(.12,.72,.2,1);
+}
+
+#wheel::after{
+    content:"🎁";
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:48px;
+    background:rgba(0,0,0,0.35);
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+#wheelPointer{
+    width:0;
+    height:0;
+    border-left:16px solid transparent;
+    border-right:16px solid transparent;
+    border-top:28px solid #ffffff;
+    margin:0 auto -8px auto;
+    filter:drop-shadow(0 0 6px gold);
+}
+
+#spinResult{
+    margin-top:10px;
+    font-size:16px;
+    color:#00ffcc;
+    font-weight:bold;
+}
+
+
+#dailyRewardPanel{
+    margin-top:18px;
+    background:linear-gradient(135deg,rgba(255,215,0,0.16),rgba(255,136,0,0.10));
+    border:1px solid rgba(255,215,0,0.35);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:0 0 20px rgba(255,215,0,0.18);
+}
+
+#dailyRewardPanel h2{
+    font-size:20px;
+    color:gold;
+    margin-bottom:8px;
+}
+
+#dailyRewardText{
+    font-size:15px;
+    color:#eeeeee;
+    margin-bottom:10px;
+}
+
+#dailyStreak{
+    color:#00ffcc;
+    font-weight:bold;
+}
+
+
+#musicControls{
+    margin-top:18px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+}
+
+.musicBtn{
+    padding:12px 18px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(45deg,#00ffcc,#0099ff);
+    color:#111;
+    font-weight:bold;
+    cursor:pointer;
+    box-shadow:0 0 15px rgba(0,255,204,0.3);
+}
+
 </style>
 </head>
 
@@ -229,6 +390,46 @@ h1{
 
 </div>
 
+
+
+
+<div id="dailyRewardPanel">
+    <h2>🎁 Daily Reward</h2>
+    <div id="dailyRewardText">
+        Claim your daily bonus and build your streak!
+    </div>
+    <button class="gameBtn" onclick="claimDailyReward()">
+        Claim Daily Reward
+    </button>
+    <div style="margin-top:10px;">
+        Streak: <span id="dailyStreak">0</span> days
+    </div>
+</div>
+
+
+<div id="spinWheelPanel">
+    <h2>🎡 Lucky Spin</h2>
+    <div id="wheelPointer"></div>
+    <div id="wheel"></div>
+    <button class="gameBtn" onclick="spinWheel()">Spin</button>
+    <div id="spinResult">Spin for bonus rewards!</div>
+</div>
+
+
+
+<div id="musicControls">
+    <button class="musicBtn" onclick="toggleMusic()">
+        🎵 Music On/Off
+    </button>
+</div>
+
+
+<div id="achievementsPanel">
+    <h2>🏆 Achievements</h2>
+    <div id="achievementsList"></div>
+</div>
+
+
 </div>
 
 <script>
@@ -236,13 +437,54 @@ h1{
 const coinSound = new Audio("coin.mp3");
 const boostSound = new Audio("boost.mp3");
 
+const bgMusic = new Audio("background.mp3");
+
+bgMusic.loop = true;
+bgMusic.volume = 0.35;
+
+let musicStarted = false;
+
+
 let score = 0;
 let combo = 1;
 let streak = 0;
 let multiplier = 1;
 let lastTap = 0;
 
+let lastDailyClaim = localStorage.getItem("lastDailyClaim") || "";
+let dailyStreak = parseInt(localStorage.getItem("dailyStreak") || "0");
+
+
+let isSpinning = false;
+let wheelRotation = 0;
+
+const spinRewards = [
+    { label:"+100 Coins", value:100, type:"coins" },
+    { label:"+250 Coins", value:250, type:"coins" },
+    { label:"Combo Bonus", value:10, type:"combo" },
+    { label:"Mini Boost", value:500, type:"coins" },
+    { label:"Jackpot +1000", value:1000, type:"coins" },
+    { label:"Try Again Bonus +50", value:50, type:"coins" }
+];
+
+
 let highScore = localStorage.getItem("highScore") || 0;
+
+let unlockedAchievements =
+    JSON.parse(localStorage.getItem("achievements") || "[]");
+
+const achievements = [
+    { id:"firstTap", title:"First Tap", description:"Tap the coin once" },
+    { id:"score100", title:"Coin Starter", description:"Reach 100 coins" },
+    { id:"score500", title:"Treasure Hunter", description:"Reach 500 coins" },
+    { id:"score1500", title:"Gold Master", description:"Reach 1500 coins" },
+    { id:"score3000", title:"Legend Tapper", description:"Reach 3000 coins" },
+    { id:"combo25", title:"Mega Streak", description:"Reach a 25 tap streak" },
+    { id:"combo50", title:"Ultra Fingers", description:"Reach a 50 tap streak" },
+    { id:"criticalHit", title:"Lucky Hit", description:"Get a critical hit" },
+    { id:"useBoost", title:"Boost Activated", description:"Use boost mode once" }
+];
+
 
 const scoreEl = document.getElementById("score");
 const comboEl = document.getElementById("combo");
@@ -250,8 +492,13 @@ const coin = document.getElementById("coin");
 const bestEl = document.getElementById("best");
 
 bestEl.innerText = highScore;
+    checkScoreAchievements();
 
 coin.addEventListener("click",(e)=>{
+
+    startMusicOnce();
+
+    unlockAchievement("firstTap");
 
     // SOUND
     coinSound.currentTime = 0;
@@ -296,6 +543,7 @@ coin.addEventListener("click",(e)=>{
         flashScreen();
         screenShake();
         createBigText("CRITICAL!");
+        unlockAchievement("criticalHit");
     }
 
     score += gain;
@@ -312,6 +560,7 @@ coin.addEventListener("click",(e)=>{
         " | Multiplier x" + multiplier;
 
     bestEl.innerText = highScore;
+    checkScoreAchievements();
 
     // EFFECTS
     createTapEffect(e,gain);
@@ -328,6 +577,13 @@ coin.addEventListener("click",(e)=>{
     if(streak === 25){
         createBigText("MEGA STREAK!");
         flashScreen();
+        unlockAchievement("combo25");
+    }
+
+    if(streak === 50){
+        createBigText("ULTRA FINGERS!");
+        flashScreen();
+        unlockAchievement("combo50");
     }
 
     lastTap = now;
@@ -471,6 +727,8 @@ function resetGame(){
 
 function boostMode(){
 
+    unlockAchievement("useBoost");
+
     boostSound.currentTime = 0;
     boostSound.play();
 
@@ -570,6 +828,271 @@ function applySkin(type){
 
         coin.style.boxShadow =
         "0 0 25px lime,0 0 60px green";
+    }
+}
+
+
+function unlockAchievement(id){
+
+    if(unlockedAchievements.includes(id)){
+        return;
+    }
+
+    unlockedAchievements.push(id);
+
+    localStorage.setItem("achievements",JSON.stringify(unlockedAchievements));
+
+    const achievement = achievements.find(item => item.id === id);
+
+    if(achievement){
+        showAchievementToast("🏆 " + achievement.title);
+    }
+
+    renderAchievements();
+}
+
+function checkScoreAchievements(){
+
+    if(score >= 100){
+        unlockAchievement("score100");
+    }
+
+    if(score >= 500){
+        unlockAchievement("score500");
+    }
+
+    if(score >= 1500){
+        unlockAchievement("score1500");
+    }
+
+    if(score >= 3000){
+        unlockAchievement("score3000");
+    }
+}
+
+function renderAchievements(){
+
+    const list = document.getElementById("achievementsList");
+
+    if(!list){
+        return;
+    }
+
+    let html = "";
+
+    achievements.forEach(item => {
+
+        const isUnlocked = unlockedAchievements.includes(item.id);
+
+        html += `
+            <div class="achievementItem ${isUnlocked ? "achievementUnlocked" : ""}">
+                ${isUnlocked ? "✅" : "🔒"} <strong>${item.title}</strong><br>
+                <small>${item.description}</small>
+            </div>
+        `;
+    });
+
+    list.innerHTML = html;
+}
+
+function showAchievementToast(text){
+
+    const toast = document.createElement("div");
+
+    toast.classList.add("achievementToast");
+
+    toast.innerText = text;
+
+    document.body.appendChild(toast);
+
+    setTimeout(()=>{
+        toast.remove();
+    },2200);
+}
+
+renderAchievements();
+checkScoreAchievements();
+
+
+function spinWheel(){
+
+    if(isSpinning){
+        return;
+    }
+
+    isSpinning = true;
+
+    const wheel = document.getElementById("wheel");
+    const result = document.getElementById("spinResult");
+
+    const rewardIndex = Math.floor(Math.random() * spinRewards.length);
+    const reward = spinRewards[rewardIndex];
+
+    const segmentAngle = 360 / spinRewards.length;
+    const targetAngle = rewardIndex * segmentAngle + segmentAngle / 2;
+
+    wheelRotation += 1440 + (360 - targetAngle);
+
+    wheel.style.transform = "rotate(" + wheelRotation + "deg)";
+
+    result.innerText = "Spinning...";
+
+    if(boostSound){
+        boostSound.currentTime = 0;
+        boostSound.play();
+    }
+
+    setTimeout(()=>{
+
+        if(reward.type === "coins"){
+            score += reward.value;
+        }
+
+        if(reward.type === "combo"){
+            combo += reward.value;
+            score += combo * 20;
+        }
+
+        if(score > highScore){
+            highScore = score;
+            localStorage.setItem("highScore",highScore);
+        }
+
+        scoreEl.innerText = score;
+        comboEl.innerText = "Combo x" + combo + " | Multiplier x" + multiplier;
+        bestEl.innerText = highScore;
+
+        result.innerText = "You won: " + reward.label + "!";
+        createBigText("🎁 " + reward.label);
+        flashScreen();
+        checkScoreAchievements();
+
+        isSpinning = false;
+
+    },3100);
+}
+
+
+function getTodayKey(){
+
+    const today = new Date();
+
+    return today.getFullYear() + "-" +
+        String(today.getMonth() + 1).padStart(2,"0") + "-" +
+        String(today.getDate()).padStart(2,"0");
+}
+
+function getYesterdayKey(){
+
+    const yesterday = new Date();
+
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    return yesterday.getFullYear() + "-" +
+        String(yesterday.getMonth() + 1).padStart(2,"0") + "-" +
+        String(yesterday.getDate()).padStart(2,"0");
+}
+
+function updateDailyRewardUI(){
+
+    const todayKey = getTodayKey();
+    const text = document.getElementById("dailyRewardText");
+    const streakEl = document.getElementById("dailyStreak");
+
+    if(streakEl){
+        streakEl.innerText = dailyStreak;
+    }
+
+    if(!text){
+        return;
+    }
+
+    if(lastDailyClaim === todayKey){
+        text.innerText = "Reward already claimed today. Come back tomorrow!";
+    }else{
+        const reward = 250 + (dailyStreak * 50);
+        text.innerText = "Available today: +" + reward + " coins";
+    }
+}
+
+function claimDailyReward(){
+
+    const todayKey = getTodayKey();
+    const yesterdayKey = getYesterdayKey();
+
+    if(lastDailyClaim === todayKey){
+        createBigText("COME BACK TOMORROW!");
+        return;
+    }
+
+    if(lastDailyClaim === yesterdayKey){
+        dailyStreak += 1;
+    }else{
+        dailyStreak = 1;
+    }
+
+    const reward = 250 + (dailyStreak * 50);
+
+    score += reward;
+
+    if(score > highScore){
+        highScore = score;
+        localStorage.setItem("highScore",highScore);
+    }
+
+    lastDailyClaim = todayKey;
+
+    localStorage.setItem("lastDailyClaim",lastDailyClaim);
+    localStorage.setItem("dailyStreak",dailyStreak);
+
+    scoreEl.innerText = score;
+    bestEl.innerText = highScore;
+
+    createBigText("🎁 DAILY +" + reward);
+    flashScreen();
+
+    if(navigator.vibrate){
+        navigator.vibrate([60,40,60]);
+    }
+
+    if(boostSound){
+        boostSound.currentTime = 0;
+        boostSound.play();
+    }
+
+    checkScoreAchievements();
+    updateDailyRewardUI();
+}
+
+updateDailyRewardUI();
+
+
+function startMusicOnce(){
+
+    if(musicStarted){
+        return;
+    }
+
+    bgMusic.play()
+    .then(()=>{
+        musicStarted = true;
+    })
+    .catch(()=>{});
+}
+
+function toggleMusic(){
+
+    if(bgMusic.paused){
+
+        bgMusic.play();
+
+        createBigText("🎵 MUSIC ON");
+
+    }else{
+
+        bgMusic.pause();
+
+        createBigText("🔇 MUSIC OFF");
     }
 }
 
