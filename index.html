@@ -7,6 +7,43 @@
 
 <style>
 
+#skins{
+
+    margin-top:20px;
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
+}
+
+.skinBtn{
+
+    padding:12px;
+
+    border:none;
+
+    border-radius:14px;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    background:#222;
+
+    color:white;
+
+    box-shadow:0 0 10px rgba(255,255,255,0.2);
+}
+
+.skinBtn:hover{
+
+    transform:scale(1.05);
+}
+
 *{
     margin:0;
     padding:0;
@@ -161,14 +198,36 @@ h1{
     </div>
 
     <div id="bottomBar">
-        <button class="gameBtn" onclick="resetGame()">
-            Reset
-        </button>
 
-        <button class="gameBtn" onclick="boostMode()">
-            Boost
-        </button>
-    </div>
+    <button class="gameBtn" onclick="resetGame()">
+        Reset
+    </button>
+
+    <button class="gameBtn" onclick="boostMode()">
+        Boost
+    </button>
+
+</div>
+
+<div id="skins">
+
+    <button class="skinBtn" onclick="setSkin('gold')">
+        Gold
+    </button>
+
+    <button class="skinBtn" onclick="setSkin('diamond')">
+        Diamond
+    </button>
+
+    <button class="skinBtn" onclick="setSkin('fire')">
+        Fire
+    </button>
+
+    <button class="skinBtn" onclick="setSkin('neon')">
+        Neon
+    </button>
+
+</div>
 
 </div>
 
@@ -435,6 +494,83 @@ function boostMode(){
     setTimeout(()=>{
         clearInterval(boost);
     },3000);
+}
+
+
+let currentSkin =
+    localStorage.getItem("skin") || "gold";
+
+applySkin(currentSkin);
+
+function setSkin(type){
+
+    if(type === "diamond" && highScore < 500){
+
+        alert("Reach 500 score to unlock Diamond!");
+
+        return;
+    }
+
+    if(type === "fire" && highScore < 1500){
+
+        alert("Reach 1500 score to unlock Fire!");
+
+        return;
+    }
+
+    if(type === "neon" && highScore < 3000){
+
+        alert("Reach 3000 score to unlock Neon!");
+
+        return;
+    }
+
+    currentSkin = type;
+
+    localStorage.setItem("skin",type);
+
+    applySkin(type);
+
+    createBigText(type.toUpperCase() + " UNLOCKED!");
+}
+
+function applySkin(type){
+
+    if(type === "gold"){
+
+        coin.style.background =
+        "radial-gradient(circle at top,#ffd700,#ff9900)";
+
+        coin.style.boxShadow =
+        "0 0 25px gold,0 0 60px orange";
+    }
+
+    if(type === "diamond"){
+
+        coin.style.background =
+        "radial-gradient(circle at top,#00e5ff,#0066ff)";
+
+        coin.style.boxShadow =
+        "0 0 25px cyan,0 0 60px blue";
+    }
+
+    if(type === "fire"){
+
+        coin.style.background =
+        "radial-gradient(circle at top,#ff2200,#ff8800)";
+
+        coin.style.boxShadow =
+        "0 0 25px red,0 0 60px orange";
+    }
+
+    if(type === "neon"){
+
+        coin.style.background =
+        "radial-gradient(circle at top,#39ff14,#00cc66)";
+
+        coin.style.boxShadow =
+        "0 0 25px lime,0 0 60px green";
+    }
 }
 
 </script>
