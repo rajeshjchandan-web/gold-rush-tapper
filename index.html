@@ -1,223 +1,87 @@
-export default function MiniMartPrototype() {
-  const { useState, useEffect } = React;
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Rush Tapper</title>
+<style>
+body {
+    margin: 0;
+    background: #111;
+    color: white;
+    font-family: Arial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
 
-  const [playerX, setPlayerX] = useState(50);
-  const [playerY, setPlayerY] = useState(50);
-  const [coins, setCoins] = useState(0);
-  const [inventory, setInventory] = useState(0);
-  const [shelfStock, setShelfStock] = useState(0);
-  const [customers, setCustomers] = useState([]);
-  const [speed, setSpeed] = useState(4);
-  const [capacity, setCapacity] = useState(5);
-  const [farmReady, setFarmReady] = useState(true);
+#game {
+    text-align: center;
+}
 
-  const FARM = { x: 60, y: 100, w: 100, h: 100 };
-  const SHELF = { x: 280, y: 100, w: 120, h: 100 };
-  const CASHIER = { x: 500, y: 100, w: 120, h: 100 };
-  const UPGRADE = { x: 500, y: 260, w: 120, h: 100 };
+#coin {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: gold;
+    border: 10px solid orange;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin: auto;
+}
 
-  function insideZone(px, py, zone) {
-    return (
-      px > zone.x &&
-      px < zone.x + zone.w &&
-      py > zone.y &&
-      py < zone.y + zone.h
-    );
-  }
+#coin:active {
+    transform: scale(0.9);
+}
 
-  useEffect(() => {
-    function handleKey(e) {
-      setPlayerX((x) => {
-        if (e.key === 'ArrowLeft' || e.key === 'a') return Math.max(0, x - speed);
-        if (e.key === 'ArrowRight' || e.key === 'd') return Math.min(760, x + speed);
-        return x;
-      });
+.score {
+    font-size: 40px;
+    margin-bottom: 20px;
+}
 
-      setPlayerY((y) => {
-        if (e.key === 'ArrowUp' || e.key === 'w') return Math.max(0, y - speed);
-        if (e.key === 'ArrowDown' || e.key === 's') return Math.min(460, y + speed);
-        return y;
-      });
+.combo {
+    font-size: 24px;
+    color: cyan;
+    margin-top: 15px;
+}
+</style>
+</head>
+<body>
+
+<div id="game">
+    <div class="score">Coins: <span id="score">0</span></div>
+    <div id="coin"></div>
+    <div class="combo">Combo x<span id="combo">1</span></div>
+</div>
+
+<script>
+let score = 0;
+let combo = 1;
+let lastTap = 0;
+
+const scoreEl = document.getElementById('score');
+const comboEl = document.getElementById('combo');
+const coin = document.getElementById('coin');
+
+coin.addEventListener('click', () => {
+    const now = Date.now();
+
+    if(now - lastTap < 500){
+        combo++;
+    } else {
+        combo = 1;
     }
 
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [speed]);
+    score += combo;
 
-  useEffect(() => {
-    const actionLoop = setInterval(() => {
-      if (insideZone(playerX, playerY, FARM)) {
-        if (farmReady && inventory < capacity) {
-          setInventory((v) => v + 1);
-          setFarmReady(false);
+    scoreEl.innerText = score;
+    comboEl.innerText = combo;
 
-          setTimeout(() => {
-            setFarmReady(true);
-          }, 2000);
-        }
-      }
+    lastTap = now;
+});
+</script>
 
-      if (insideZone(playerX, playerY, SHELF)) {
-        if (inventory > 0) {
-          setShelfStock((s) => s + inventory);
-          setInventory(0);
-        }
-      }
-
-      if (insideZone(playerX, playerY, UPGRADE)) {
-        if (coins >= 20) {
-          setCoins((c) => c - 20);
-          setCapacity((c) => c + 2);
-        }
-      }
-    }, 200);
-
-    return () => clearInterval(actionLoop);
-  }, [playerX, playerY, inventory, farmReady, coins, capacity]);
-
-  useEffect(() => {
-    const customerSpawner = setInterval(() => {
-      const id = Date.now();
-
-      setCustomers((c) => [
-        ...c,
-        {
-          id,
-          progress: 0,
-        },
-      ]);
-    }, 4000);
-
-    return () => clearInterval(customerSpawner);
-  }, []);
-
-  useEffect(() => {
-    const customerLoop = setInterval(() => {
-      setCustomers((current) => {
-        return current
-          .map((customer) => ({
-            ...customer,
-            progress: customer.progress + 5,
-          }))
-          .filter((customer) => {
-            if (customer.progress >= 100) {
-              if (shelfStock > 0) {
-                setShelfStock((s) => s - 1);
-                setCoins((c) => c + 5);
-              }
-              return false;
-            }
-            return true;
-          });
-      });
-    }, 300);
-
-    return () => clearInterval(customerLoop);
-  }, [shelfStock]);
-
-  return (
-    <div className="w-full h-screen bg-green-100 flex flex-col items-center p-4 font-sans overflow-hidden">
-      <h1 className="text-4xl font-bold mb-2">Mini Mart Prototype</h1>
-
-      <div className="flex gap-4 mb-4 text-lg font-semibold flex-wrap justify-center">
-        <div className="bg-white px-4 py-2 rounded-2xl shadow">Coins: {coins}</div>
-        <div className="bg-white px-4 py-2 rounded-2xl shadow">Inventory: {inventory}/{capacity}</div>
-        <div className="bg-white px-4 py-2 rounded-2xl shadow">Shelf: {shelfStock}</div>
-        <div className="bg-white px-4 py-2 rounded-2xl shadow">Speed: {speed}</div>
-      </div>
-
-      <div className="mb-3 text-center text-sm text-gray-700">
-        Use WASD or Arrow Keys to move around.
-      </div>
-
-      <div className="relative w-[800px] h-[500px] bg-green-300 border-4 border-black rounded-3xl overflow-hidden shadow-2xl">
-        <div
-          className="absolute bg-yellow-400 rounded-2xl border-4 border-yellow-700 flex items-center justify-center text-center font-bold"
-          style={{
-            left: FARM.x,
-            top: FARM.y,
-            width: FARM.w,
-            height: FARM.h,
-          }}
-        >
-          {farmReady ? 'Tomato Farm' : 'Growing...'}
-        </div>
-
-        <div
-          className="absolute bg-blue-400 rounded-2xl border-4 border-blue-700 flex items-center justify-center text-center font-bold"
-          style={{
-            left: SHELF.x,
-            top: SHELF.y,
-            width: SHELF.w,
-            height: SHELF.h,
-          }}
-        >
-          Shelf
-        </div>
-
-        <div
-          className="absolute bg-orange-400 rounded-2xl border-4 border-orange-700 flex items-center justify-center text-center font-bold"
-          style={{
-            left: CASHIER.x,
-            top: CASHIER.y,
-            width: CASHIER.w,
-            height: CASHIER.h,
-          }}
-        >
-          Customers
-        </div>
-
-        <div
-          className="absolute bg-purple-400 rounded-2xl border-4 border-purple-700 flex items-center justify-center text-center font-bold text-center p-2"
-          style={{
-            left: UPGRADE.x,
-            top: UPGRADE.y,
-            width: UPGRADE.w,
-            height: UPGRADE.h,
-          }}
-        >
-          Upgrade Bag
-          <br />
-          20 Coins
-        </div>
-
-        {customers.map((customer, index) => (
-          <div
-            key={customer.id}
-            className="absolute w-10 h-10 bg-red-500 rounded-full border-2 border-black flex items-center justify-center text-white text-xs font-bold"
-            style={{
-              left: 500 - customer.progress,
-              top: 220 + index * 12,
-            }}
-          >
-            C
-          </div>
-        ))}
-
-        <div
-          className="absolute w-12 h-12 bg-black rounded-full border-4 border-white transition-all duration-75"
-          style={{
-            left: playerX,
-            top: playerY,
-          }}
-        />
-      </div>
-
-      <div className="mt-4 max-w-3xl bg-white rounded-3xl shadow-xl p-4 text-sm leading-7">
-        <h2 className="text-2xl font-bold mb-2">Features Included</h2>
-
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Player movement</li>
-          <li>Farm resource collection</li>
-          <li>Inventory system</li>
-          <li>Shelf stocking</li>
-          <li>Customer purchasing</li>
-          <li>Coin economy</li>
-          <li>Upgrade system</li>
-          <li>Automatic customer spawning</li>
-          <li>Browser-playable prototype</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
+</body>
+</html>
