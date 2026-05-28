@@ -179,7 +179,10 @@ const boostSound = new Audio("boost.mp3");
 
 let score = 0;
 let combo = 1;
+let streak = 0;
+let multiplier = 1;
 let lastTap = 0;
+
 let highScore = localStorage.getItem("highScore") || 0;
 
 const scoreEl = document.getElementById("score");
@@ -190,40 +193,94 @@ const bestEl = document.getElementById("best");
 bestEl.innerText = highScore;
 
 coin.addEventListener("click",(e)=>{
-coinSound.currentTime = 0;
-coinSound.play();
 
+    // SOUND
+    coinSound.currentTime = 0;
+    coinSound.play();
+
+    // MOBILE VIBRATION
+    if(navigator.vibrate){
+        navigator.vibrate(25);
+    }
+
+    // COMBO SYSTEM
     const now = Date.now();
 
     if(now - lastTap < 500){
         combo++;
+        streak++;
     }else{
         combo = 1;
+        streak = 0;
     }
 
-    score += combo;
+    // MULTIPLIER LOGIC
+    if(streak > 20){
+        multiplier = 5;
+    }else if(streak > 10){
+        multiplier = 3;
+    }else{
+        multiplier = 1;
+    }
 
+    // RANDOM CRITICAL HIT
+    let critical = false;
+
+    if(Math.random() < 0.1){
+        critical = true;
+    }
+
+    let gain = combo * multiplier;
+
+    if(critical){
+        gain *= 5;
+        flashScreen();
+        screenShake();
+        createBigText("CRITICAL!");
+    }
+
+    score += gain;
+
+    // UPDATE SCORE
     if(score > highScore){
         highScore = score;
         localStorage.setItem("highScore",highScore);
     }
 
     scoreEl.innerText = score;
-    comboEl.innerText = "Combo x" + combo;
+    comboEl.innerText =
+        "Combo x" + combo +
+        " | Multiplier x" + multiplier;
+
     bestEl.innerText = highScore;
 
-    createTapEffect(e);
+    // EFFECTS
+    createTapEffect(e,gain);
+    createParticles(e.clientX,e.clientY);
+
+    // COIN ANIMATION
+    coin.style.transform = "scale(0.9)";
+
+    setTimeout(()=>{
+        coin.style.transform = "scale(1)";
+    },80);
+
+    // STREAK REWARD
+    if(streak === 25){
+        createBigText("MEGA STREAK!");
+        flashScreen();
+    }
 
     lastTap = now;
 });
 
-function createTapEffect(e){
+function createTapEffect(e,value){
 
     const effect = document.createElement("div");
 
     effect.classList.add("tapEffect");
 
-    effect.innerText = "+" + combo;
+    effect.innerText = "+" + value;
 
     document.body.appendChild(effect);
 
@@ -235,21 +292,135 @@ function createTapEffect(e){
     },1000);
 }
 
+function createParticles(x,y){
+
+    for(let i=0;i<10;i++){
+
+        const particle = document.createElement("div");
+
+        particle.style.position = "absolute";
+        particle.style.width = "10px";
+        particle.style.height = "10px";
+        particle.style.borderRadius = "50%";
+        particle.style.background = "gold";
+        particle.style.left = x + "px";
+        particle.style.top = y + "px";
+        particle.style.pointerEvents = "none";
+
+        document.body.appendChild(particle);
+
+        const angle = Math.random()*360;
+        const distance = Math.random()*120;
+
+        particle.animate([
+            {
+                transform:"translate(0,0)",
+                opacity:1
+            },
+            {
+                transform:
+                `translate(
+                    ${Math.cos(angle)*distance}px,
+                    ${Math.sin(angle)*distance}px
+                )`,
+                opacity:0
+            }
+        ],{
+            duration:700
+        });
+
+        setTimeout(()=>{
+            particle.remove();
+        },700);
+    }
+}
+
+function screenShake(){
+
+    document.body.animate([
+        { transform:"translate(5px,0)" },
+        { transform:"translate(-5px,0)" },
+        { transform:"translate(0,0)" }
+    ],{
+        duration:150
+    });
+}
+
+function flashScreen(){
+
+    const flash = document.createElement("div");
+
+    flash.style.position = "fixed";
+    flash.style.top = 0;
+    flash.style.left = 0;
+    flash.style.width = "100%";
+    flash.style.height = "100%";
+    flash.style.background = "white";
+    flash.style.opacity = "0.4";
+    flash.style.pointerEvents = "none";
+
+    document.body.appendChild(flash);
+
+    setTimeout(()=>{
+        flash.remove();
+    },100);
+}
+
+function createBigText(text){
+
+    const big = document.createElement("div");
+
+    big.innerText = text;
+
+    big.style.position = "fixed";
+    big.style.top = "40%";
+    big.style.left = "50%";
+    big.style.transform = "translate(-50%,-50%)";
+
+    big.style.fontSize = "50px";
+    big.style.fontWeight = "bold";
+    big.style.color = "gold";
+    big.style.textShadow = "0 0 20px orange";
+
+    big.style.zIndex = 999;
+
+    document.body.appendChild(big);
+
+    big.animate([
+        { opacity:0, transform:"translate(-50%,-50%) scale(0.5)" },
+        { opacity:1, transform:"translate(-50%,-50%) scale(1.3)" },
+        { opacity:0, transform:"translate(-50%,-50%) scale(2)" }
+    ],{
+        duration:1000
+    });
+
+    setTimeout(()=>{
+        big.remove();
+    },1000);
+}
+
 function resetGame(){
+
     score = 0;
     combo = 1;
+    streak = 0;
 
     scoreEl.innerText = score;
+
     comboEl.innerText = "Combo x1";
 }
 
 function boostMode(){
 
-boostSound.currentTime = 0;
-boostSound.play();
+    boostSound.currentTime = 0;
+    boostSound.play();
+
+    flashScreen();
+    createBigText("BOOST MODE!");
 
     let boost = setInterval(()=>{
-        score += 10;
+
+        score += 25;
 
         if(score > highScore){
             highScore = score;
